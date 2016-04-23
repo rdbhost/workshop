@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>Rdbhost Whiteboard Demo</title>
+
+  <!-- Bootstrap -->
+  <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+
+  <script type="text/javascript" src="https://dev.rdbhost.com/vendor/labjs/LAB.js"></script>
+  <script>
+    var $L = $LAB
+            .script('https://dev.rdbhost.com/vendor/rdbhost/latest/lib/js/rdbhost-bundle.js').wait(
+                function() {
+
+                  if ( !Rdbhost.featuredetects.hasPromises() )
+                    $L = $L.script('https://dev.rdbhost.com/vendor/rdbhost/latest/vendor/es6-promises/dist/es6-promise.js');
+                  if ( !Rdbhost.featuredetects.hasFetch() )
+                    $L = $L.script('https://dev.rdbhost.com/vendor/rdbhost/latest/vendor/fetch/fetch.js').wait();
+                }
+            );
+
+    $L = $L.script("https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js")
+            .script('https://dev.rdbhost.com/vendor/rdbhost/latest/lib/js/rdbhost_livereload.js')
+            .script("bootstrap/js/bootstrap.min.js")
+            .script("bootstrap/js/bootbox.min.js")
+            .script("js/sketch.js")
+            .script("js/whiteboard.js")
+            .script('https://dev.rdbhost.com/vendor/rdbhost/latest/lib/js/rdbhost-authenticate.js')
+
+  </script>
+  <style type='text/css'>
+    .tools { margin-bottom: 10px; }
+    .tools a {
+      border: 1px solid black; height: 30px; line-height: 30px; padding: 0 10px; vertical-align: middle;
+      text-align: center; text-decoration: none; display: inline-block; color: black; font-weight: bold;
+    }
+  </style>
+
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <!-- button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button -->
+      <a class="navbar-brand" href="#">RdbHost Whiteboard</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+
+        <li class="dropdown">
+          <a class="dropdown-toggle" href="#" data-toggle="dropdown">Login <strong class="caret"></strong></a>
+          <div class="dropdown-menu" style="padding: 15px; padding-bottom: 10px;">
+            <form method="post" action="login" accept-charset="UTF-8">
+              <input class="btn btn-primary btn-block" type="button" id="login-google" value="Sign In with Google">
+            </form>
+          </div>
+        </li>
+
+        <li><a href="#" id="new-drawing">New Drawing</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Drawings <span class="caret"></span></a>
+          <ul class="dropdown-menu" id="drawings-menu">
+            <li><a href="#">One</a></li>
+            <li><a href="#">Another drawing</a></li>
+          </ul>
+        </li>
+        <li><span id="userid" class="navbar-text">UserID</span></li>
+
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-6">
+    <div class="tools">
+
+      <a href="#simple_sketch" data-color="#f00" style="width: 10px; background: #f00;"></a>
+      <a href="#simple_sketch" data-color="#ff0" style="width: 10px; background: #ff0;"></a>
+      <a href="#simple_sketch" data-color="#0f0" style="width: 10px; background: #0f0;"></a>
+      <a href="#simple_sketch" data-color="#0ff" style="width: 10px; background: #0ff;"></a>
+      <a href="#simple_sketch" data-color="#00f" style="width: 10px; background: #00f;"></a>
+      <a href="#simple_sketch" data-color="#f0f" style="width: 10px; background: #f0f;"></a>
+      <a href="#simple_sketch" data-color="#000" style="width: 10px; background: #000;"></a>
+      <a href="#simple_sketch" data-color="#fff" style="width: 10px; background: #fff;"></a>
+      <a href="#simple_sketch" data-size="3" style="background: #ccc">3</a>
+      <a href="#simple_sketch" data-size="5" style="background: #ccc">5</a>
+      <a href="#simple_sketch" data-size="10" style="background: #ccc">10</a>
+      <a href="#simple_sketch" data-size="15" style="background: #ccc">15</a>
+    </div>
+    <canvas id="simple_sketch" width="800" height="300" style="border:1px solid #000000;"></canvas>
+
+  </div>
+  <div class="col-md-4"></div>
+</div>
+
+<!-- h1>Hello, Whiteboarder</h1 -->
+
+
+<script type="text/javascript">
+
+  var userIdx, userKey, drawingIdx;
+
+  $L = $L.wait(function() {
+
+    Rdbhost.connect(1730);
+    var preauth = Rdbhost.preauth();
+    Rdbhost.activate_reloader(preauth);
+
+    $('#simple_sketch').sketch();
+    whiteboard.create($('#simple_sketch'));
+
+    whiteboard.populate_list();
+    $('#drawings-menu').on('click', 'a', function(evt) {
+
+        drawingIdx = $(evt.target).data('id');
+        $('#simple_sketch').trigger('clear');
+        whiteboard.load(drawingIdx);
+    });
+
+    $('#login-google').click(function() {
+
+        Rdbhost.fedauth_login('Google', 'http://db1730.rdbhost.net');
+    });
+
+    $('#new-drawing').click(function(evt) {
+        whiteboard.new();
+    });
+
+    var storage = sessionStorage;
+    if (storage.getItem('idxAndKey')) {
+
+      var _tmp = JSON.parse(storage.getItem('idxAndKey'));
+      userIdx = _tmp[0];
+      userKey = _tmp[1];
+      document.getElementById('userid').innerHTML = userIdx;
+    }
+    else {
+
+      var loginProm = Rdbhost.confirm_fedauth_login();
+      loginProm.then(function(authData) {
+        if (authData.status === undefined)
+          return;
+        if (authData.status !== 'loggedin') {
+
+          alert('login '+authData.status);
+          document.getElementById('userid').innerHTML = 'not logged in';
+        }
+        else {
+
+          userIdx = authData.idx;
+          userKey = authData.key;
+          storage.setItem('idxAndKey', JSON.stringify([userIdx, userKey]));
+          document.getElementById('userid').innerHTML = userIdx;
+        }
+      })
+    }
+  });
+</script>
+
+</body>
+</html>
